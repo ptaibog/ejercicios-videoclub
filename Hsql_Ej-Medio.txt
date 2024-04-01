@@ -1,0 +1,150 @@
+-- DIFICULTAD: Media
+
+
+-- 14. Devuelve el nombre de todas las películas y el nombre del estudio que las ha realizado
+
+SELECT m.MOVIE_NAME, s.STUDIO_NAME 
+FROM PUBLIC.MOVIES m
+INNER JOIN PUBLIC.STUDIOS s ON m.STUDIO_ID = s.STUDIO_ID 
+
+
+-- 15. Devuelve los miembros que alquilaron al menos una película entre el año 2010 y el 2015
+
+SELECT DISTINCT me.MEMBER_NAME AS "Nombre del socio"
+FROM PUBLIC.MEMBERS me
+INNER JOIN PUBLIC.MEMBERS_MOVIE_RENTAL mmr ON me.MEMBER_ID = mmr.MEMBER_ID 
+WHERE YEAR(mmr.MEMBER_RENTAL_DATE) >= 2010
+AND YEAR (mmr.MEMBER_RENTAL_DATE) <= 2015;
+
+SELECT DISTINCT me.MEMBER_NAME AS "Nombre del socio"
+FROM PUBLIC.MEMBERS me
+INNER JOIN PUBLIC.MEMBERS_MOVIE_RENTAL mmr ON me.MEMBER_ID = mmr.MEMBER_ID 
+WHERE YEAR(mmr.MEMBER_RENTAL_DATE)BETWEEN 2010 AND 2015;
+
+-- 16. Devuelve cuantas películas hay de cada país
+
+SELECT m.NATIONALITY_ID, COUNT(m.MOVIE_ID), n.NATIONALITY_NAME  
+FROM PUBLIC.MOVIES m 
+INNER JOIN PUBLIC.NATIONALITIES n ON m.NATIONALITY_ID = n.NATIONALITY_ID
+GROUP BY m.NATIONALITY_ID, n.NATIONALITY_NAME 
+ORDER BY m.NATIONALITY_ID ASC;
+
+
+-- 17. Devuelve todas las películas que hay de género documental
+
+SELECT m.MOVIE_NAME, g.GENRE_NAME 
+FROM PUBLIC.MOVIES m 
+INNER JOIN PUBLIC.GENRES g ON m.GENRE_ID = g.GENRE_ID 
+WHERE g.GENRE_ID = 2;
+
+-- 18. Devuelve todas las películas creadas por directores nacidos a partir de 1980 y que todavía están vivos
+
+SELECT m.MOVIE_NAME, d.DIRECTOR_NAME, DATEDIFF(YEAR, d.DIRECTOR_BIRTH_DATE, TODAY()) AS "Edad"
+FROM PUBLIC.MOVIES m
+INNER JOIN PUBLIC.DIRECTORS d ON m.DIRECTOR_ID = d.DIRECTOR_ID 
+WHERE YEAR (d.DIRECTOR_BIRTH_DATE) >= 1980
+AND d.DIRECTOR_DEAD_DATE IS NULL
+ORDER BY d.DIRECTOR_ID;
+
+
+-- 19. Indica si hay alguna coincidencia de nacimiento de ciudad (y si las hay, indicarlas) 
+-- 	   entre los miembros del videoclub y los directores.
+
+SELECT m2.MEMBER_NAME, d.DIRECTOR_NAME, d.DIRECTOR_BIRTH_PLACE 
+FROM PUBLIC.PUBLIC.DIRECTORS d 
+INNER JOIN PUBLIC.PUBLIC.MOVIES m  ON d.DIRECTOR_ID = m.DIRECTOR_ID
+INNER JOIN PUBLIC.PUBLIC.MEMBERS_MOVIE_RENTAL mmr ON m.MOVIE_ID = mmr.MOVIE_ID
+INNER JOIN PUBLIC.PUBLIC.MEMBERS m2 ON mmr.MEMBER_ID = m2.MEMBER_ID
+WHERE d.DIRECTOR_BIRTH_PLACE = m2.MEMBER_TOWN;
+
+-- Esta es la forma correcta, ya que no hace falta sequir las claves primarias, si las seguimos
+-- hay un momento en el que deja de tener sentido.
+
+SELECT me.MEMBER_TOWN 
+FROM PUBLIC.MEMBERS me
+INNER JOIN PUBLIC.DIRECTORS d ON me.MEMBER_TOWN = d.DIRECTOR_BIRTH_PLACE;
+
+
+-- 20. Devuelve el nombre y el año de todas las películas que han sido producidas por un estudio 
+--     que actualmente no esté activo
+
+SELECT m.MOVIE_NAME AS "Nombre de la pelicula", YEAR (m.MOVIE_LAUNCH_DATE) AS "Año de lanzamiento", S.STUDIO_NAME AS "Nombre del estudio"
+FROM PUBLIC.MOVIES m
+INNER JOIN PUBLIC.STUDIOS s ON m.STUDIO_ID = s.STUDIO_ID
+WHERE s.STUDIO_ACTIVE = FALSE
+ORDER BY s.STUDIO_NAME;
+
+
+-- 21. Devuelve una lista de las últimas 10 películas que se han alquilado
+
+SELECT m.MOVIE_NAME, mmr.MEMBER_RENTAL_DATE
+FROM PUBLIC.MOVIES m
+INNER JOIN PUBLIC.MEMBERS_MOVIE_RENTAL mmr ON m.MOVIE_ID = mmr.MOVIE_ID 
+ORDER BY mmr.MEMBER_RENTAL_DATE DESC LIMIT 10;
+
+-- 22. Indica cuántas películas ha realizado cada director antes de cumplir 41 años
+
+SELECT COUNT(MOVIE_ID), d.DIRECTOR_NAME
+FROM PUBLIC.MOVIES m
+INNER JOIN	PUBLIC.DIRECTORS d ON m.DIRECTOR_ID = d.DIRECTOR_ID 
+WHERE DATEDIFF(YEAR, d.DIRECTOR_BIRTH_DATE, m.MOVIE_LAUNCH_DATE) < 41
+GROUP BY d.DIRECTOR_ID;
+
+-- 23. Indica cuál es la media de duración de las películas de cada director
+
+SELECT AVG(m.MOVIE_DURATION), m.DIRECTOR_ID 
+FROM PUBLIC.MOVIES m
+GROUP BY m.DIRECTOR_ID
+ORDER BY m.DIRECTOR_ID ;
+
+
+SELECT AVG(m.MOVIE_DURATION), d.DIRECTOR_NAME, m.DIRECTOR_ID  
+FROM PUBLIC.MOVIES m
+INNER JOIN PUBLIC.DIRECTORS d ON m.DIRECTOR_ID = d.DIRECTOR_ID 
+GROUP BY d.DIRECTOR_NAME
+ORDER BY m.DIRECTOR_ID ;
+
+
+-- 24. Indica cuál es el nombre y la duración mínima de las películas que han sido alquiladas en los últimos 
+--     2 años por los miembros del videoclub (La "fecha de ejecución" en este script es el 25-01-2019)
+--     ENUNCIADO CORREGIDO: SOLO 1 RESULTADO, LA PELICULA MAS CORTA
+
+SELECT m.MOVIE_NAME, m.MOVIE_DURATION 
+FROM PUBLIC.MOVIES m 
+INNER JOIN PUBLIC.MEMBERS_MOVIE_RENTAL mmr ON m.MOVIE_ID = mmr.MOVIE_ID 
+WHERE YEAR (mmr.MEMBER_RENTAL_DATE) BETWEEN 2017 AND 2020
+ORDER BY m.MOVIE_DURATION ASC LIMIT 1;
+
+SELECT m.MOVIE_NAME, m.MOVIE_DURATION 
+FROM PUBLIC.MOVIES m 
+INNER JOIN PUBLIC.MEMBERS_MOVIE_RENTAL mmr ON m.MOVIE_ID = mmr.MOVIE_ID 
+WHERE DATEDIFF(YEAR, mmr.MEMBER_RENTAL_DATE, '2019-01-25') <= 2 
+ORDER BY m.MOVIE_DURATION ASC LIMIT 1;
+
+
+-- 25. Indica el número de películas que hayan hecho los directores durante las décadas de los 60, 70 y 
+--     80 que contengan la palabra "The" en cualquier parte del título
+
+SELECT COUNT(m.MOVIE_ID) 
+FROM PUBLIC.MOVIES m
+WHERE YEAR (m.MOVIE_LAUNCH_DATE) BETWEEN 1960 AND 1989
+AND m.MOVIE_NAME LIKE '%The%';
+
+-- El primero corregido, tiene que dar 9 (hay un 10o dato entre parentesis, deberia dar 10)
+
+SELECT COUNT(m.MOVIE_NAME) AS "PELICULAS REALIZADAS"
+FROM MOVIES m
+WHERE YEAR(m.MOVIE_LAUNCH_DATE) BETWEEN 1960 AND 1989 
+AND ((M.MOVIE_NAME LIKE 'The %') OR (M.MOVIE_NAME LIKE '% The %') OR (M.MOVIE_NAME LIKE '% The'));
+
+-- Buen ejercicio, se puede hacer con between
+
+SELECT COUNT (m.MOVIE_ID), d.DIRECTOR_NAME
+FROM PUBLIC.MOVIES m
+INNER JOIN PUBLIC.DIRECTORS d ON m.DIRECTOR_ID = d.DIRECTOR_ID 
+WHERE m.MOVIE_LAUNCH_DATE >= DATE '1960-01-01'
+AND m.MOVIE_LAUNCH_DATE < DATE '1989-12-31'
+AND ((m.MOVIE_NAME LIKE 'The %')
+OR (m.MOVIE_NAME LIKE '% The %')
+OR (m.MOVIE_NAME LIKE '% The'))
+GROUP BY d.DIRECTOR_NAME, m.MOVIE_NAME ;
