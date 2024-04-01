@@ -1,0 +1,163 @@
+/*
+DIFICULTAD: Muy fácil
+
+1. Devuelve todas las películas*/
+
+SELECT * FROM PUBLIC.MOVIES;
+
+
+-- 2. Devuelve todos los géneros existentes
+
+SELECT * FROM PUBLIC.GENRES;
+SELECT GENRE_NAME FROM GENRES;
+SELECT g.GENRE_NAME FROM GENRES g;
+SELECT g.GENRE_NAME AS "Nombre del genero" FROM GENRES g;
+
+-- 3. Devuelve la lista de todos los estudios de grabación que estén activos
+
+SELECT STUDIO_NAME
+FROM PUBLIC.STUDIOS 
+WHERE STUDIO_ACTIVE = 1;
+
+SELECT STUDIO_NAME
+FROM PUBLIC.STUDIOS 
+WHERE STUDIO_ACTIVE = TRUE;
+
+-- 4. Devuelve una lista de los 20 últimos miembros en anotarse al videoclub
+
+SELECT *
+FROM PUBLIC.MEMBERS 
+ORDER BY MEMBER_DISCHARGE_DATE DESC LIMIT 20;
+
+-- DIFICULTAD: Fácil
+
+
+-- 5. Devuelve las 20 duraciones de películas más frecuentes, ordenados de mayor a menor.
+
+SELECT m.MOVIE_DURATION 
+FROM PUBLIC.MOVIES m
+GROUP BY m.MOVIE_DURATION 
+ORDER BY COUNT(m.MOVIE_ID) DESC LIMIT 20; 
+
+-- MOSTRAR CUANTAS HAY DE CADA DURACION Y ORDENAR DE MAYOR A MENOR DURACION
+
+SELECT m.MOVIE_DURATION AS "Duracion Pelicula", COUNT(m.MOVIE_ID) AS "Numero de Peliculas" 
+FROM PUBLIC.MOVIES m
+GROUP BY m.MOVIE_DURATION 
+ORDER BY COUNT(m.MOVIE_ID) DESC, m.MOVIE_DURATION DESC LIMIT 20; 
+
+-- 6. Devuelve las películas del año 2000 en adelante que empiecen por la letra A.
+
+SELECT *
+FROM PUBLIC.MOVIES m
+WHERE m.MOVIE_LAUNCH_DATE BETWEEN '2000-01-01' AND '2024-01-01'
+AND m.MOVIE_NAME LIKE 'A%';
+
+SELECT *
+FROM PUBLIC.MOVIES m
+WHERE m.MOVIE_LAUNCH_DATE >= '2000-01-01'
+AND m.MOVIE_NAME LIKE 'A%';
+
+SELECT *
+FROM PUBLIC.MOVIES m
+WHERE m.MOVIE_LAUNCH_DATE LIKE '20%'
+AND m.MOVIE_NAME LIKE 'A%';
+
+-- Utilizando funciones de fecha:
+-- Para poder usar las funciones de fecha en algun campo, ese campo debe ser de tipo DATE o similar
+-- Usaremos las funciones YEAR(), MONTH() o DAY()
+-- Cada una de estas funciones de fecha devuelve el año, mes o dia respectivamente de la fecha 
+-- que se le pase por parametro (como dato numerico)
+-- EJ: YEAR(2000--5-02) --> Devolvera el año 2000 (numero).
+
+SELECT m.MOVIE_NAME AS "Titulo pelicula", m.MOVIE_LAUNCH_DATE AS "Fecha de lanzamiento"
+FROM PUBLIC.MOVIES m
+WHERE YEAR (m.MOVIE_LAUNCH_DATE) >= 2000
+AND m.MOVIE_NAME LIKE 'A%';
+
+
+-- 7. Devuelve los actores nacidos un mes de Junio
+
+SELECT a.ACTOR_NAME, a.ACTOR_BIRTH_DATE 
+FROM PUBLIC.ACTORS a
+WHERE a.ACTOR_BIRTH_DATE LIKE '%-06-%';
+
+SELECT a.ACTOR_NAME, a.ACTOR_BIRTH_DATE 
+FROM PUBLIC.ACTORS a
+WHERE MONTH (a.ACTOR_BIRTH_DATE) = 6;
+
+-- 8. Devuelve los actores nacidos cualquier mes que no sea Junio y que sigan vivos.
+
+SELECT a.ACTOR_NAME, a.ACTOR_BIRTH_DATE, a.ACTOR_DEAD_DATE 
+FROM PUBLIC.ACTORS a
+WHERE a.ACTOR_BIRTH_DATE NOT LIKE '%-06-%'
+AND a.ACTOR_DEAD_DATE IS NULL;
+
+SELECT a.ACTOR_NAME, a.ACTOR_BIRTH_DATE, a.ACTOR_DEAD_DATE 
+FROM PUBLIC.ACTORS a
+WHERE MONTH (a.ACTOR_BIRTH_DATE) != 6;
+AND a.ACTOR_DEAD_DATE IS NULL;
+
+/* DATEDIFF()
+ * DATEDIFF() es una función que resta dos fechas. 
+ * Utiliza 3 parámetros (los datos que van dentro del paréntesis)
+ * 1º) La unidad temporal que queremos que nos devuelva: YEAR, MONTH, DAY (será siempre un valor numerico)
+ * 2º) La fecha inicial
+ * 3º) La fecha final
+ * DATEDIFF() restará la fecha final menos la fecha inicial (3er parametro menos el 2º)
+ */
+
+-- 9. Devuelve el nombre y la edad de todos los directores menores o iguales de 50 años que estén vivos
+
+SELECT d.DIRECTOR_NAME, d.DIRECTOR_BIRTH_DATE  
+FROM PUBLIC.DIRECTORS d
+WHERE d.DIRECTOR_BIRTH_DATE >= '1973-01-01'
+AND d.DIRECTOR_DEAD_DATE IS NULL;
+
+SELECT d.DIRECTOR_NAME, DATEDIFF(YEAR, d.DIRECTOR_BIRTH_DATE, TODAY()) AS "Edad del director"
+FROM PUBLIC.DIRECTORS d
+WHERE DATEDIFF(YEAR, d.DIRECTOR_BIRTH_DATE, TODAY()) <= 50
+AND d.DIRECTOR_DEAD_DATE IS NULL;
+
+
+-- 10. Devuelve el nombre y la edad de todos los actores menores de 50 años que hayan fallecido
+
+SELECT d.DIRECTOR_NAME AS "Nombre", d.DIRECTOR_BIRTH_DATE AS "Fecha de nacimiento", d.DIRECTOR_DEAD_DATE AS "Fallecimiento"   
+FROM PUBLIC.DIRECTORS d
+WHERE d.DIRECTOR_BIRTH_DATE >= '1974-01-01'
+AND d.DIRECTOR_DEAD_DATE IS NOT NULL;
+
+SELECT a.ACTOR_NAME , DATEDIFF(YEAR, a.ACTOR_BIRTH_DATE , a.ACTOR_DEAD_DATE) 
+FROM PUBLIC.PUBLIC.ACTORS a 
+WHERE DATEDIFF(YEAR, a.ACTOR_BIRTH_DATE , a.ACTOR_DEAD_DATE) < 50
+AND a.ACTOR_DEAD_DATE  IS NOT NULL;
+
+-- 11. Devuelve el nombre de todos los directores menores o iguales de 40 años que estén vivos
+
+SELECT d.DIRECTOR_NAME, d.DIRECTOR_BIRTH_DATE  
+FROM PUBLIC.DIRECTORS d
+WHERE d.DIRECTOR_BIRTH_DATE >= '1983-01-01'
+AND d.DIRECTOR_DEAD_DATE IS NULL;
+
+SELECT d.DIRECTOR_NAME, DATEDIFF(YEAR, d.DIRECTOR_BIRTH_DATE, TODAY()) 
+FROM PUBLIC.DIRECTORS d
+WHERE DATEDIFF(YEAR, d.DIRECTOR_BIRTH_DATE, TODAY()) <= 40
+AND d.DIRECTOR_DEAD_DATE IS NULL;
+
+
+-- 12. Indica la edad media de los directores vivos
+
+SELECT AVG(d.DIRECTOR_BIRTH_DATE) 
+FROM PUBLIC.PUBLIC.DIRECTORS d 
+WHERE d.DIRECTOR_DEAD_DATE IS NULL;
+
+SELECT AVG(DATEDIFF(YEAR, d.DIRECTOR_BIRTH_DATE, TODAY())) 
+FROM PUBLIC.DIRECTORS d
+WHERE d.DIRECTOR_DEAD_DATE IS NULL;
+
+
+-- 13. Indica la edad media de los actores que han fallecido
+
+SELECT AVG(DATEDIFF(YEAR, a.ACTOR_BIRTH_DATE , a.ACTOR_DEAD_DATE)) 
+FROM PUBLIC.PUBLIC.ACTORS a 
+WHERE a.ACTOR_DEAD_DATE  IS NOT NULL;
